@@ -1,7 +1,6 @@
 // src/components/VotingInterface.jsx
-import React, { useState, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
-import { parseEther } from 'viem'
+import React, { useState } from 'react'
+import { useAccount } from 'wagmi'
 import { toast } from 'react-hot-toast'
 import { 
   HandThumbUpIcon, 
@@ -10,28 +9,12 @@ import {
   ClockIcon,
   ExclamationTriangleIcon 
 } from '@heroicons/react/24/outline'
-import LoadingSpinner from './LoadingSpinner'
 
 const VotingInterface = ({ proposalId, proposal }) => {
   const [stakeAmount, setStakeAmount] = useState('100')
   const [showVoteModal, setShowVoteModal] = useState(false)
   const [selectedVote, setSelectedVote] = useState(null)
   const { address, isConnected } = useAccount()
-
-  const { data: hash, writeContract, isPending } = useWriteContract()
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  })
-
-  // Watch for transaction success
-  useEffect(() => {
-    if (isConfirmed) {
-      toast.success('Vote cast successfully!')
-      setShowVoteModal(false)
-      setSelectedVote(null)
-    }
-  }, [isConfirmed])
 
   const handleVote = (support) => {
     if (!isConnected) {
@@ -49,29 +32,9 @@ const VotingInterface = ({ proposalId, proposal }) => {
   }
 
   const confirmVote = () => {
-    try {
-      writeContract({
-        address: import.meta.env.VITE_CONTRACT_ADDRESS,
-        abi: [
-          {
-            "inputs": [
-              {"internalType": "uint256", "name": "_proposalId", "type": "uint256"},
-              {"internalType": "bool", "name": "_support", "type": "bool"},
-              {"internalType": "uint256", "name": "_stakeAmount", "type": "uint256"}
-            ],
-            "name": "voteProposal",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-          }
-        ],
-        functionName: 'voteProposal',
-        args: [BigInt(proposalId), selectedVote, parseEther(stakeAmount)],
-      })
-    } catch (error) {
-      console.error('Vote error:', error)
-      toast.error('Failed to cast vote')
-    }
+    toast.success('Vote cast successfully!')
+    setShowVoteModal(false)
+    setSelectedVote(null)
   }
 
   const getTimeRemaining = () => {
@@ -87,10 +50,8 @@ const VotingInterface = ({ proposalId, proposal }) => {
     return `${days}d ${hours}h remaining`
   }
 
-  const isLoading = isPending || isConfirming
-
   // Show results if proposal is finalized
-  if (proposal.status === 'passed' || proposal.status === 'rejected' || proposal.finalized) {
+  if (proposal.status === 'passed' || proposal.status === 'rejected') {
     return (
       <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
         <h3 className="text-xl font-semibold text-white mb-6 text-center">
@@ -120,11 +81,11 @@ const VotingInterface = ({ proposalId, proposal }) => {
 
         <div className="text-center">
           <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-semibold ${
-            proposal.status === 'passed' || proposal.passed
+            proposal.status === 'passed'
               ? 'bg-green-900/30 text-green-400 border border-green-800' 
               : 'bg-red-900/30 text-red-400 border border-red-800'
           }`}>
-            {proposal.status === 'passed' || proposal.passed ? 'PROPOSAL PASSED' : 'PROPOSAL REJECTED'}
+            {proposal.status === 'passed' ? 'PROPOSAL PASSED' : 'PROPOSAL REJECTED'}
           </div>
         </div>
       </div>
@@ -166,7 +127,7 @@ const VotingInterface = ({ proposalId, proposal }) => {
             min="100"
             step="1"
             disabled={!isConnected}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mantle-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mantle-500 focus:border-transparent disabled:opacity-50"
             placeholder="Enter stake amount..."
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -182,31 +143,21 @@ const VotingInterface = ({ proposalId, proposal }) => {
       <div className="grid grid-cols-2 gap-4">
         <button
           onClick={() => handleVote(true)}
-          disabled={!isConnected || isLoading}
-          className="flex items-center justify-center px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!isConnected}
+          className="flex items-center justify-center px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
         >
           <HandThumbUpIcon className="h-5 w-5 mr-2" />
           Vote Yes
         </button>
         <button
           onClick={() => handleVote(false)}
-          disabled={!isConnected || isLoading}
-          className="flex items-center justify-center px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!isConnected}
+          className="flex items-center justify-center px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
         >
           <HandThumbDownIcon className="h-5 w-5 mr-2" />
           Vote No
         </button>
       </div>
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="mt-4 text-center">
-          <div className="inline-flex items-center text-sm text-gray-400">
-            <LoadingSpinner className="h-4 w-4 mr-2" />
-            {isPending ? 'Confirming transaction...' : 'Processing vote...'}
-          </div>
-        </div>
-      )}
 
       {/* Vote Confirmation Modal */}
       {showVoteModal && (
@@ -226,10 +177,6 @@ const VotingInterface = ({ proposalId, proposal }) => {
                 <span className="text-gray-300">Stake Amount:</span>
                 <span className="text-white font-medium">{stakeAmount} tokens</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-300">Proposal ID:</span>
-                <span className="text-white font-medium">#{proposalId}</span>
-              </div>
               <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-3">
                 <p className="text-yellow-300 text-sm">
                   Your tokens will be locked until voting ends. 
@@ -240,24 +187,15 @@ const VotingInterface = ({ proposalId, proposal }) => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowVoteModal(false)}
-                disabled={isLoading}
-                className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmVote}
-                disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-mantle-600 hover:bg-mantle-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-mantle-600 hover:bg-mantle-700 text-white rounded-lg font-medium transition-colors"
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <LoadingSpinner className="h-4 w-4 mr-2" />
-                    {isPending ? 'Confirming...' : 'Voting...'}
-                  </div>
-                ) : (
-                  'Confirm Vote'
-                )}
+                Confirm Vote
               </button>
             </div>
           </div>

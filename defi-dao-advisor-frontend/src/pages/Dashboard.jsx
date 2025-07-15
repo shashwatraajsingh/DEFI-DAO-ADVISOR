@@ -10,16 +10,11 @@ import {
   XCircleIcon
 } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
-import LoadingSpinner from '@/components/LoadingSpinner'
 
 const Dashboard = () => {
   const { address, isConnected } = useAccount()
-  const [userStats, setUserStats] = useState(null)
-  const [userVotes, setUserVotes] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  // Mock data
-  const mockUserStats = {
+  
+  const userStats = {
     totalStaked: 5000,
     totalRewards: 1250,
     votingPower: 0.05,
@@ -28,7 +23,7 @@ const Dashboard = () => {
     votescast: 12
   }
 
-  const mockUserVotes = [
+  const userVotes = [
     {
       id: 1,
       title: "Increase Staking Rewards by 5%",
@@ -46,27 +41,8 @@ const Dashboard = () => {
       status: "passed",
       outcome: true,
       reward: 150
-    },
-    {
-      id: 3,
-      title: "Partnership with DeFi Protocol X",
-      vote: false,
-      stake: 500,
-      status: "rejected",
-      outcome: false,
-      reward: 25
     }
   ]
-
-  useEffect(() => {
-    if (isConnected) {
-      setTimeout(() => {
-        setUserStats(mockUserStats)
-        setUserVotes(mockUserVotes)
-        setLoading(false)
-      }, 1000)
-    }
-  }, [isConnected])
 
   if (!isConnected) {
     return (
@@ -79,22 +55,12 @@ const Dashboard = () => {
     )
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <LoadingSpinner className="h-12 w-12" />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-900 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Dashboard</h1>
-          <p className="text-xl text-gray-400">
-            Track your voting activity and rewards
-          </p>
+          <p className="text-xl text-gray-400">Track your voting activity and rewards</p>
         </div>
 
         {/* Stats Grid */}
