@@ -75,8 +75,8 @@ const HomePage = () => {
             </h1>
             
             <p className="text-xl lg:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-              With DeFi DAO Advisor, get AI-powered proposal analysis, stake-based voting, 
-              and token holder governed decision making for the future of DeFi.
+             DeFiDAO advisor provides an AI-based proposal analysis, voting based on stakes, and 
+              The decision-making for the fate of the future of DeFi shall be governed by token holders
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
