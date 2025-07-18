@@ -81,7 +81,7 @@ const analyzeProposal = async () => {
   setNetworkError(null)
   
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001' || process.env.NEXT_PUBLIC_API_URL;
     const endpoint = `${backendUrl}/api/summarize`
     
     console.log('🔄 Attempting to connect to:', endpoint)
