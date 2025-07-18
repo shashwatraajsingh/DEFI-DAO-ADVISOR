@@ -7,9 +7,10 @@ import {
   ExclamationTriangleIcon, 
   CheckCircleIcon,
   DocumentTextIcon,
-  ClockIcon 
+  ClockIcon,
+  XMarkIcon 
 } from '@heroicons/react/24/outline'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 const CreateProposal = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ const CreateProposal = () => {
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [step, setStep] = useState(1)
+  const [networkError, setNetworkError] = useState(null)
 
   const { isConnected } = useAccount()
   const { data: hash, writeContract, isPending } = useWriteContract()
@@ -76,36 +78,71 @@ const CreateProposal = () => {
     }
 
     setIsAnalyzing(true)
+    setNetworkError(null)
+    
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/summarize`, {
+      // Enhanced backend URL handling
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+      
+      console.log('🔄 Sending request to:', `${backendUrl}/api/summarize`)
+      console.log('📝 Request data:', formData)
+      
+      const response = await fetch(`${backendUrl}/api/summarize`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(formData),
       })
 
+      console.log('📡 Response status:', response.status)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const result = await response.json()
-      if (result.success) {
+      console.log('✅ Backend response:', result)
+      
+      if (result.success && result.analysis) {
         setAiAnalysis(result.analysis)
         setStep(3)
         toast.success('AI analysis completed!')
       } else {
-        toast.error('Failed to analyze proposal')
+        throw new Error(result.error || 'Failed to analyze proposal')
       }
     } catch (error) {
-      console.error('Analysis error:', error)
-      // Mock analysis for demo purposes
-      setAiAnalysis({
-        tldr: "This proposal suggests implementing a new governance mechanism that could improve decision-making efficiency while maintaining decentralization.",
-        riskLevel: "Medium",
-        riskExplanation: "The proposal involves changes to core governance processes which could impact system stability if not implemented carefully.",
+      console.error('❌ Analysis error:', error)
+      setNetworkError(error.message)
+      
+      // Enhanced fallback with actual proposal content
+      const fallbackAnalysis = {
+        tldr: `This ${formData.proposalType} proposal "${formData.title}" ${
+          formData.description.length > 100 
+            ? 'involves significant changes that' 
+            : 'proposes modifications that'
+        } require careful community evaluation and risk assessment.`,
+        riskLevel: formData.proposalType === 'protocol' ? 'High' : 
+                   formData.proposalType === 'treasury' ? 'Medium' : 'Low',
+        riskExplanation: `As a ${formData.proposalType} proposal, this change ${
+          formData.proposalType === 'protocol' 
+            ? 'involves technical modifications that could affect system security and stability' 
+            : formData.proposalType === 'treasury'
+            ? 'involves financial allocations that could impact long-term sustainability'
+            : 'involves governance changes that require community consensus'
+        }. Implementation should be carefully planned with proper testing and monitoring.`,
         keyConsiderations: [
-          "Requires thorough testing before implementation",
-          "May need community education period",
-          "Should include rollback mechanisms"
+          `${formData.proposalType === 'protocol' ? 'Technical' : 'Community'} consensus and stakeholder alignment are crucial`,
+          `${formData.proposalType === 'treasury' ? 'Financial' : 'Implementation'} feasibility and impact assessment required`,
+          `Risk mitigation strategies should be ${formData.proposalType === 'protocol' ? 'technically' : 'carefully'} planned`,
+          `Timeline for implementation should be realistic with proper ${formData.proposalType === 'protocol' ? 'testing' : 'consultation'} phases`
         ]
-      })
+      }
+      
+      setAiAnalysis(fallbackAnalysis)
       setStep(3)
-      toast.success('AI analysis completed!')
+      toast.success('AI analysis completed! (Using fallback analysis)')
     } finally {
       setIsAnalyzing(false)
     }
@@ -125,7 +162,7 @@ const CreateProposal = () => {
     }
 
     // In a real implementation, you'd upload to IPFS first
-    const ipfsHash = 'QmExample...' // Mock IPFS hash
+    const ipfsHash = `QmExample${Date.now()}` // Mock IPFS hash with timestamp
     
     try {
       writeContract({
@@ -161,6 +198,15 @@ const CreateProposal = () => {
     }
   }
 
+  const getRiskIcon = (riskLevel) => {
+    switch (riskLevel?.toLowerCase()) {
+      case 'high': return '🚨'
+      case 'medium': return '⚠️'
+      case 'low': return '✅'
+      default: return '❓'
+    }
+  }
+
   const isLoading = isPending || isConfirming
 
   return (
@@ -174,6 +220,26 @@ const CreateProposal = () => {
           </p>
         </div>
 
+        {/* Network Error Alert */}
+        {networkError && (
+          <div className="mb-8 bg-red-900/30 border border-red-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-2" />
+                <span className="text-red-300 text-sm">
+                  Network Error: {networkError}
+                </span>
+              </div>
+              <button
+                onClick={() => setNetworkError(null)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Progress Steps */}
         <div className="mb-12">
           <div className="flex items-center justify-center space-x-8">
@@ -183,7 +249,7 @@ const CreateProposal = () => {
               { number: 3, title: 'Review & Submit', active: step >= 3 }
             ].map((stepItem, index) => (
               <div key={stepItem.number} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-all ${
                   stepItem.active 
                     ? 'bg-mantle-500 border-mantle-500 text-white' 
                     : 'border-gray-600 text-gray-400'
@@ -196,7 +262,7 @@ const CreateProposal = () => {
                   {stepItem.title}
                 </span>
                 {index < 2 && (
-                  <div className={`w-16 h-0.5 ml-4 ${
+                  <div className={`w-16 h-0.5 ml-4 transition-all ${
                     step > stepItem.number ? 'bg-mantle-500' : 'bg-gray-600'
                   }`} />
                 )}
@@ -349,6 +415,11 @@ const CreateProposal = () => {
                     <div className="flex items-center mb-6">
                       <SparklesIcon className="h-6 w-6 text-mantle-400 mr-3" />
                       <h3 className="text-xl font-semibold text-white">AI Analysis Results</h3>
+                      {networkError && (
+                        <span className="ml-2 text-xs text-yellow-400 bg-yellow-900/30 px-2 py-1 rounded">
+                          Fallback Analysis
+                        </span>
+                      )}
                     </div>
                     
                     <div className="space-y-6">
@@ -371,7 +442,7 @@ const CreateProposal = () => {
                         </h4>
                         <div className="flex items-start space-x-4">
                           <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border ${getRiskColor(aiAnalysis.riskLevel)}`}>
-                            <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
+                            <span className="mr-2">{getRiskIcon(aiAnalysis.riskLevel)}</span>
                             {aiAnalysis.riskLevel} Risk
                           </div>
                           <div className="flex-1">
