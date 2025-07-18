@@ -24,26 +24,19 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Simple JSON parsing function WITHOUT regex
+// Enhanced JSON parsing function in CreateProposal.jsx
 function parseGeminiResponse(text) {
   try {
     console.log('Original Gemini response:', text);
     
-    // Clean the text using only string methods (NO REGEX)
+    // Clean the text using only string methods
     let cleanText = text.trim();
     
-    // Remove markdown code blocks using string methods
-  while (cleanText.includes('```'))
-  cleanText = cleanText.replace('```json', '');
-
-while (cleanText.includes('```'))
-  cleanText = cleanText.replace('```javascript', '');
-
-while (cleanText.includes('```'))
-  cleanText = cleanText.replace('```', '');
-
-while (cleanText.includes('`')) {
-  cleanText = cleanText.replace('`', '');
-}
+    // Remove markdown code blocks
+    cleanText = cleanText.replace(/```json/gi, '');
+    cleanText = cleanText.replace(```)
+    cleanText = cleanText.replace(/```/g, '');
+    cleanText = cleanText.replace(/`/g, '');
     
     // Remove extra whitespace
     cleanText = cleanText.trim();
@@ -53,7 +46,7 @@ while (cleanText.includes('`')) {
       cleanText = cleanText.substring(4).trim();
     }
     
-    // Extract JSON object
+    // Find JSON object boundaries
     const firstBrace = cleanText.indexOf('{');
     const lastBrace = cleanText.lastIndexOf('}');
     
@@ -61,15 +54,20 @@ while (cleanText.includes('`')) {
       cleanText = cleanText.substring(firstBrace, lastBrace + 1);
     }
     
-    console.log('Cleaned text:', cleanText);
+    console.log('Cleaned text for parsing:', cleanText);
     
     // Parse the cleaned JSON
-    return JSON.parse(cleanText);
+    const parsed = JSON.parse(cleanText);
+    console.log('Successfully parsed JSON:', parsed);
+    
+    return parsed;
   } catch (error) {
-    console.error('JSON parsing error:', error);
-    throw error;
+    console.error('JSON parsing failed:', error);
+    console.error('Text that failed to parse:', cleanText);
+    throw error; // Throw the error so the catch block in analyzeProposal handles it
   }
 }
+
 
 // AI Summarization endpoint
 app.post('/api/summarize', async (req, res) => {

@@ -81,16 +81,17 @@ const analyzeProposal = async () => {
   setNetworkError(null)
   
   try {
-    // Enhanced backend URL handling
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
     const endpoint = `${backendUrl}/api/summarize`
     
     console.log('🔄 Attempting to connect to:', endpoint)
     console.log('📝 Request data:', formData)
     
-    // Add timeout to prevent hanging requests
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+      console.log('⏰ Request timed out after 30 seconds')
+    }, 30000)
     
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -104,30 +105,43 @@ const analyzeProposal = async () => {
 
     clearTimeout(timeoutId)
     
-    console.log('📡 Response status:', response.status)
-    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
     const result = await response.json()
     console.log('✅ Backend response:', result)
     
     if (result.success && result.analysis) {
+      // ✅ Use the actual AI analysis from backend
+      console.log('🎯 Using real AI analysis:', result.analysis)
       setAiAnalysis(result.analysis)
-      setStep(3) // This moves to the next step to display results
+      setStep(3)
       toast.success('AI analysis completed!')
     } else {
-      throw new Error(result.error || 'Invalid response from backend')
+      throw new Error(result.error || 'Invalid response format')
     }
     
   } catch (error) {
-    console.error('❌ Network error:', error)
+    console.error('❌ Analysis error:', error)
     
-    // Enhanced fallback analysis
+    // Only use fallback if there's a real network error
+    if (error.name === 'AbortError') {
+      setNetworkError('Backend connection timeout')
+      toast.error('Request timeout. Using fallback analysis.')
+    } else if (error.message.includes('Failed to fetch')) {
+      setNetworkError('Cannot reach backend server')
+      toast.error('Backend unreachable. Using fallback analysis.')
+    } else {
+      // For other errors, still try to use any available backend response
+      setNetworkError(`Error: ${error.message}`)
+      toast.error('Error occurred. Using fallback analysis.')
+    }
+    
+    // Fallback analysis only when backend is truly unavailable
     const fallbackAnalysis = {
       tldr: `This ${formData.proposalType} proposal "${formData.title}" requires careful community evaluation and risk assessment.`,
-      riskLevel: formData.proposalType === 'protocol' ? 'High' : 'Medium',
+      riskLevel: "Medium",
       riskExplanation: `As a ${formData.proposalType} proposal, this involves changes that could affect protocol operations and requires thorough evaluation.`,
       keyConsiderations: [
         'Community consensus and stakeholder alignment are crucial',
@@ -138,13 +152,14 @@ const analyzeProposal = async () => {
     }
     
     setAiAnalysis(fallbackAnalysis)
-    setStep(3) // Important: This ensures the UI shows the results
+    setStep(3)
     toast.success('Fallback analysis completed!')
     
   } finally {
     setIsAnalyzing(false)
   }
 }
+
 
 
   const handleSubmit = async (e) => {

@@ -1,18 +1,10 @@
 import React from 'react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { defineChain } from 'viem'
-import { RainbowKitProvider, getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-
-// Import wallet connectors
-import {
-  metaMaskWallet,
-  walletConnectWallet,
-  coinbaseWallet,
-  injectedWallet,
-} from '@rainbow-me/rainbowkit/wallets'
 
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
@@ -51,29 +43,20 @@ const mantleSepoliaTestnet = defineChain({
   testnet: true,
 })
 
-// Configure wallet connectors using connectorsForWallets for better control
-const connectors = connectorsForWallets([
-  {
-    groupName: 'Recommended',
-    wallets: [
-      metaMaskWallet({ 
-        projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID, 
-        chains: [mantleSepoliaTestnet] 
-      }),
-      walletConnectWallet({ 
-        projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID, 
-        chains: [mantleSepoliaTestnet] 
-      }),
-      coinbaseWallet({ 
-        appName: 'DeFi DAO Advisor', 
-        chains: [mantleSepoliaTestnet] 
-      }),
-      injectedWallet({ 
-        chains: [mantleSepoliaTestnet] 
-      }),
-    ],
-  },
-])
+// Get project ID with fallback
+const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || 'demo-project-id'
+
+// Warn if using demo project ID
+if (projectId === 'demo-project-id') {
+  console.warn('Using demo project ID. Please set VITE_WALLET_CONNECT_PROJECT_ID in your .env file')
+}
+
+// Configure wallet connectors using getDefaultWallets (simpler approach)
+const { connectors } = getDefaultWallets({
+  appName: 'DeFi DAO Advisor',
+  projectId: projectId,
+  chains: [mantleSepoliaTestnet],
+})
 
 // Create Wagmi config with Mantle Sepolia Testnet
 const config = createConfig({
@@ -103,21 +86,6 @@ function App() {
         <RainbowKitProvider
           chains={[mantleSepoliaTestnet]}
           initialChain={mantleSepoliaTestnet}
-          modalSize="compact"
-          theme={{
-            lightMode: {
-              colors: {
-                accentColor: '#14b8a6',
-                accentColorForeground: 'white',
-              },
-            },
-            darkMode: {
-              colors: {
-                accentColor: '#14b8a6',
-                accentColorForeground: 'white',
-              },
-            },
-          }}
         >
           <Router>
             <div className="min-h-screen bg-gray-900">

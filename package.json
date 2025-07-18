@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.8",
+    "@tanstack/react-query": "^5.83.0",
+    "viem": "^2.32.0",
+    "wagmi": "^2.15.7"
+  }
+}
