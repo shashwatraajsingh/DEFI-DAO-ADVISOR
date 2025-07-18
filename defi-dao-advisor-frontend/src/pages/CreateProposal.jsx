@@ -71,82 +71,81 @@ const CreateProposal = () => {
     },
   ]
 
-  const analyzeProposal = async () => {
-    if (!formData.title || !formData.description) {
-      toast.error('Please fill in title and description first')
-      return
-    }
-
-    setIsAnalyzing(true)
-    setNetworkError(null)
-    
-    try {
-      // Enhanced backend URL handling
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
-      
-      console.log('🔄 Sending request to:', `${backendUrl}/api/summarize`)
-      console.log('📝 Request data:', formData)
-      
-      const response = await fetch(`${backendUrl}/api/summarize`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(formData),
-      })
-
-      console.log('📡 Response status:', response.status)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      console.log('✅ Backend response:', result)
-      
-      if (result.success && result.analysis) {
-        setAiAnalysis(result.analysis)
-        setStep(3)
-        toast.success('AI analysis completed!')
-      } else {
-        throw new Error(result.error || 'Failed to analyze proposal')
-      }
-    } catch (error) {
-      console.error('❌ Analysis error:', error)
-      setNetworkError(error.message)
-      
-      // Enhanced fallback with actual proposal content
-      const fallbackAnalysis = {
-        tldr: `This ${formData.proposalType} proposal "${formData.title}" ${
-          formData.description.length > 100 
-            ? 'involves significant changes that' 
-            : 'proposes modifications that'
-        } require careful community evaluation and risk assessment.`,
-        riskLevel: formData.proposalType === 'protocol' ? 'High' : 
-                   formData.proposalType === 'treasury' ? 'Medium' : 'Low',
-        riskExplanation: `As a ${formData.proposalType} proposal, this change ${
-          formData.proposalType === 'protocol' 
-            ? 'involves technical modifications that could affect system security and stability' 
-            : formData.proposalType === 'treasury'
-            ? 'involves financial allocations that could impact long-term sustainability'
-            : 'involves governance changes that require community consensus'
-        }. Implementation should be carefully planned with proper testing and monitoring.`,
-        keyConsiderations: [
-          `${formData.proposalType === 'protocol' ? 'Technical' : 'Community'} consensus and stakeholder alignment are crucial`,
-          `${formData.proposalType === 'treasury' ? 'Financial' : 'Implementation'} feasibility and impact assessment required`,
-          `Risk mitigation strategies should be ${formData.proposalType === 'protocol' ? 'technically' : 'carefully'} planned`,
-          `Timeline for implementation should be realistic with proper ${formData.proposalType === 'protocol' ? 'testing' : 'consultation'} phases`
-        ]
-      }
-      
-      setAiAnalysis(fallbackAnalysis)
-      setStep(3)
-      toast.success('AI analysis completed! (Using fallback analysis)')
-    } finally {
-      setIsAnalyzing(false)
-    }
+const analyzeProposal = async () => {
+  if (!formData.title || !formData.description) {
+    toast.error('Please fill in title and description first')
+    return
   }
+
+  setIsAnalyzing(true)
+  setNetworkError(null)
+  
+  try {
+    // Enhanced backend URL handling
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+    const endpoint = `${backendUrl}/api/summarize`
+    
+    console.log('🔄 Attempting to connect to:', endpoint)
+    console.log('📝 Request data:', formData)
+    
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(formData),
+      signal: controller.signal
+    })
+
+    clearTimeout(timeoutId)
+    
+    console.log('📡 Response status:', response.status)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const result = await response.json()
+    console.log('✅ Backend response:', result)
+    
+    if (result.success && result.analysis) {
+      setAiAnalysis(result.analysis)
+      setStep(3) // This moves to the next step to display results
+      toast.success('AI analysis completed!')
+    } else {
+      throw new Error(result.error || 'Invalid response from backend')
+    }
+    
+  } catch (error) {
+    console.error('❌ Network error:', error)
+    
+    // Enhanced fallback analysis
+    const fallbackAnalysis = {
+      tldr: `This ${formData.proposalType} proposal "${formData.title}" requires careful community evaluation and risk assessment.`,
+      riskLevel: formData.proposalType === 'protocol' ? 'High' : 'Medium',
+      riskExplanation: `As a ${formData.proposalType} proposal, this involves changes that could affect protocol operations and requires thorough evaluation.`,
+      keyConsiderations: [
+        'Community consensus and stakeholder alignment are crucial',
+        'Technical feasibility and impact assessment required',
+        'Risk mitigation strategies should be carefully planned',
+        'Implementation timeline should be realistic and well-tested'
+      ]
+    }
+    
+    setAiAnalysis(fallbackAnalysis)
+    setStep(3) // Important: This ensures the UI shows the results
+    toast.success('Fallback analysis completed!')
+    
+  } finally {
+    setIsAnalyzing(false)
+  }
+}
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()

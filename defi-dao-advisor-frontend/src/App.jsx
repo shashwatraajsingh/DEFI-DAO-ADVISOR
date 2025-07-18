@@ -1,11 +1,18 @@
-
 import React from 'react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
-import { mantleTestnet } from 'wagmi/chains'
-import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
+import { defineChain } from 'viem'
+import { RainbowKitProvider, getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+
+// Import wallet connectors
+import {
+  metaMaskWallet,
+  walletConnectWallet,
+  coinbaseWallet,
+  injectedWallet,
+} from '@rainbow-me/rainbowkit/wallets'
 
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
@@ -17,27 +24,101 @@ import ProposalList from './pages/ProposalList'
 import '@rainbow-me/rainbowkit/styles.css'
 import './App.css'
 
-const { connectors } = getDefaultWallets({
-  appName: 'DeFi DAO Advisor',
-  projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
-  chains: [mantleTestnet],
+// Define the correct Mantle Sepolia Testnet
+const mantleSepoliaTestnet = defineChain({
+  id: 5003,
+  name: 'Mantle Sepolia Testnet',
+  network: 'mantle-sepolia',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'MNT',
+    symbol: 'MNT',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.sepolia.mantle.xyz'],
+    },
+    public: {
+      http: ['https://rpc.sepolia.mantle.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Mantle Sepolia Explorer',
+      url: 'https://sepolia.mantlescan.xyz',
+    },
+  },
+  testnet: true,
 })
 
+// Configure wallet connectors using connectorsForWallets for better control
+const connectors = connectorsForWallets([
+  {
+    groupName: 'Recommended',
+    wallets: [
+      metaMaskWallet({ 
+        projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID, 
+        chains: [mantleSepoliaTestnet] 
+      }),
+      walletConnectWallet({ 
+        projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID, 
+        chains: [mantleSepoliaTestnet] 
+      }),
+      coinbaseWallet({ 
+        appName: 'DeFi DAO Advisor', 
+        chains: [mantleSepoliaTestnet] 
+      }),
+      injectedWallet({ 
+        chains: [mantleSepoliaTestnet] 
+      }),
+    ],
+  },
+])
+
+// Create Wagmi config with Mantle Sepolia Testnet
 const config = createConfig({
-  chains: [mantleTestnet],
+  chains: [mantleSepoliaTestnet],
   connectors,
   transports: {
-    [mantleTestnet.id]: http(),
+    [mantleSepoliaTestnet.id]: http('https://rpc.sepolia.mantle.xyz'),
   },
 })
 
-const queryClient = new QueryClient()
+// Configure QueryClient with optimized settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 10, // 10 minutes
+      retry: 3,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+})
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
-        <RainbowKitProvider>
+        <RainbowKitProvider
+          chains={[mantleSepoliaTestnet]}
+          initialChain={mantleSepoliaTestnet}
+          modalSize="compact"
+          theme={{
+            lightMode: {
+              colors: {
+                accentColor: '#14b8a6',
+                accentColorForeground: 'white',
+              },
+            },
+            darkMode: {
+              colors: {
+                accentColor: '#14b8a6',
+                accentColorForeground: 'white',
+              },
+            },
+          }}
+        >
           <Router>
             <div className="min-h-screen bg-gray-900">
               <Layout>
@@ -49,7 +130,29 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                 </Routes>
               </Layout>
-              <Toaster position="top-right" />
+              <Toaster 
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#1f2937',
+                    color: '#f9fafb',
+                    border: '1px solid #374151',
+                  },
+                  success: {
+                    iconTheme: {
+                      primary: '#14b8a6',
+                      secondary: '#fff',
+                    },
+                  },
+                  error: {
+                    iconTheme: {
+                      primary: '#ef4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
             </div>
           </Router>
         </RainbowKitProvider>
