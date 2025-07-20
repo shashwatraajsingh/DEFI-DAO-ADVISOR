@@ -1,6 +1,6 @@
 // src/pages/CreateProposal.jsx
 import React, { useState } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi'
 import { toast } from 'react-hot-toast'
 import { 
   SparklesIcon, 
@@ -24,6 +24,7 @@ const CreateProposal = () => {
   const [networkError, setNetworkError] = useState(null)
 
   const { isConnected } = useAccount()
+  const chainId = useChainId()
   const { data: hash, writeContract, isPending } = useWriteContract()
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
@@ -71,122 +72,163 @@ const CreateProposal = () => {
     },
   ]
 
-const analyzeProposal = async () => {
-  if (!formData.title || !formData.description) {
-    toast.error('Please fill in title and description first')
-    return
-  }
-
-  setIsAnalyzing(true)
-  setNetworkError(null)
-  
-  try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001' || process.env.NEXT_PUBLIC_API_URL;
-    const endpoint = `${backendUrl}/api/summarize`
-    
-    console.log('🔄 Attempting to connect to:', endpoint)
-    console.log('📝 Request data:', formData)
-    
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-      console.log('⏰ Request timed out after 30 seconds')
-    }, 30000)
-    
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(formData),
-      signal: controller.signal
-    })
-
-    clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  const analyzeProposal = async () => {
+    if (!formData.title || !formData.description) {
+      toast.error('Please fill in title and description first')
+      return
     }
 
-    const result = await response.json()
-    console.log('✅ Backend response:', result)
+    setIsAnalyzing(true)
+    setNetworkError(null)
     
-    if (result.success && result.analysis) {
-      // ✅ Use the actual AI analysis from backend
-      console.log('🎯 Using real AI analysis:', result.analysis)
-      setAiAnalysis(result.analysis)
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+      const endpoint = `${backendUrl}/api/summarize`
+      
+      console.log('🔄 Attempting to connect to:', endpoint)
+      console.log('📝 Request data:', formData)
+      
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+        console.log('⏰ Request timed out after 30 seconds')
+      }, 30000)
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(formData),
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Backend response:', result)
+      
+      if (result.success && result.analysis) {
+        console.log('🎯 Using real AI analysis:', result.analysis)
+        setAiAnalysis(result.analysis)
+        setStep(3)
+        toast.success('AI analysis completed!')
+      } else {
+        throw new Error(result.error || 'Invalid response format')
+      }
+      
+    } catch (error) {
+      console.error('❌ Analysis error:', error)
+      
+      if (error.name === 'AbortError') {
+        setNetworkError('Backend connection timeout')
+        toast.error('Request timeout. Using fallback analysis.')
+      } else if (error.message.includes('Failed to fetch')) {
+        setNetworkError('Cannot reach backend server')
+        toast.error('Backend unreachable. Using fallback analysis.')
+      } else {
+        setNetworkError(`Error: ${error.message}`)
+        toast.error('Error occurred. Using fallback analysis.')
+      }
+      
+      // Fallback analysis
+      const fallbackAnalysis = {
+        tldr: `This ${formData.proposalType} proposal "${formData.title}" requires careful community evaluation and risk assessment.`,
+        riskLevel: "Medium",
+        riskExplanation: `As a ${formData.proposalType} proposal, this involves changes that could affect protocol operations and requires thorough evaluation.`,
+        keyConsiderations: [
+          'Community consensus and stakeholder alignment are crucial',
+          'Technical feasibility and impact assessment required',
+          'Risk mitigation strategies should be carefully planned',
+          'Implementation timeline should be realistic and well-tested'
+        ]
+      }
+      
+      setAiAnalysis(fallbackAnalysis)
       setStep(3)
-      toast.success('AI analysis completed!')
-    } else {
-      throw new Error(result.error || 'Invalid response format')
+      toast.success('Fallback analysis completed!')
+      
+    } finally {
+      setIsAnalyzing(false)
     }
-    
-  } catch (error) {
-    console.error('❌ Analysis error:', error)
-    
-    // Only use fallback if there's a real network error
-    if (error.name === 'AbortError') {
-      setNetworkError('Backend connection timeout')
-      toast.error('Request timeout. Using fallback analysis.')
-    } else if (error.message.includes('Failed to fetch')) {
-      setNetworkError('Cannot reach backend server')
-      toast.error('Backend unreachable. Using fallback analysis.')
-    } else {
-      // For other errors, still try to use any available backend response
-      setNetworkError(`Error: ${error.message}`)
-      toast.error('Error occurred. Using fallback analysis.')
-    }
-    
-    // Fallback analysis only when backend is truly unavailable
-    const fallbackAnalysis = {
-      tldr: `This ${formData.proposalType} proposal "${formData.title}" requires careful community evaluation and risk assessment.`,
-      riskLevel: "Medium",
-      riskExplanation: `As a ${formData.proposalType} proposal, this involves changes that could affect protocol operations and requires thorough evaluation.`,
-      keyConsiderations: [
-        'Community consensus and stakeholder alignment are crucial',
-        'Technical feasibility and impact assessment required',
-        'Risk mitigation strategies should be carefully planned',
-        'Implementation timeline should be realistic and well-tested'
-      ]
-    }
-    
-    setAiAnalysis(fallbackAnalysis)
-    setStep(3)
-    toast.success('Fallback analysis completed!')
-    
-  } finally {
-    setIsAnalyzing(false)
   }
-}
 
-
+  // Helper function to get proposal type ID
+  const getProposalTypeId = (type) => {
+    const types = {
+      'governance': 0,
+      'treasury': 1,
+      'protocol': 2,
+      'partnership': 3
+    }
+    return types[type] || 0
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    console.log('🚀 Submit button clicked!')
+    console.log('📊 Current state:', {
+      isConnected,
+      chainId,
+      aiAnalysis: !!aiAnalysis,
+      contractAddress: import.meta.env.VITE_CONTRACT_ADDRESS,
+      formData
+    })
+    
+    // Validation checks
     if (!isConnected) {
+      console.error('❌ Wallet not connected')
       toast.error('Please connect your wallet first')
       return
     }
 
+    if (chainId !== 5003) {
+      console.error('❌ Wrong network:', chainId)
+      toast.error('Please switch to Mantle Sepolia Testnet (Chain ID: 5003)')
+      return
+    }
+
     if (!aiAnalysis) {
+      console.error('❌ No AI analysis')
       toast.error('Please analyze the proposal first')
       return
     }
 
-    // In a real implementation, you'd upload to IPFS first
-    const ipfsHash = `QmExample${Date.now()}` // Mock IPFS hash with timestamp
-    
+    const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
+    if (!contractAddress) {
+      console.error('❌ Missing contract address')
+      toast.error('Contract address not configured. Please deploy your smart contract first.')
+      return
+    }
+
     try {
-      writeContract({
-        address: import.meta.env.VITE_CONTRACT_ADDRESS,
+      console.log('📝 Preparing transaction...')
+      
+      // Mock IPFS hash for now
+      const ipfsHash = `Qm${Date.now().toString(36)}`
+      
+      const proposalTypeId = getProposalTypeId(formData.proposalType)
+      
+      console.log('🔗 Contract call details:', {
+        address: contractAddress,
+        args: [formData.title, formData.description, ipfsHash, proposalTypeId]
+      })
+
+      await writeContract({
+        address: contractAddress,
         abi: [
           {
             "inputs": [
               {"internalType": "string", "name": "_title", "type": "string"},
               {"internalType": "string", "name": "_description", "type": "string"},
-              {"internalType": "string", "name": "_ipfsHash", "type": "string"}
+              {"internalType": "string", "name": "_ipfsHash", "type": "string"},
+              {"internalType": "uint8", "name": "_proposalType", "type": "uint8"}
             ],
             "name": "createProposal",
             "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
@@ -195,11 +237,25 @@ const analyzeProposal = async () => {
           }
         ],
         functionName: 'createProposal',
-        args: [formData.title, formData.description, ipfsHash],
+        args: [formData.title, formData.description, ipfsHash, proposalTypeId],
       })
+      
+      console.log('✅ Transaction initiated successfully!')
+      toast.success('Transaction submitted! Please wait for confirmation.')
+      
     } catch (error) {
-      console.error('Contract write error:', error)
-      toast.error('Failed to create proposal')
+      console.error('❌ Contract write error:', error)
+      
+      // More specific error messages
+      if (error.message?.includes('User rejected')) {
+        toast.error('Transaction rejected by user')
+      } else if (error.message?.includes('insufficient funds')) {
+        toast.error('Insufficient funds for transaction')
+      } else if (error.message?.includes('execution reverted')) {
+        toast.error('Transaction failed: Contract execution reverted')
+      } else {
+        toast.error(`Transaction failed: ${error.message || 'Unknown error'}`)
+      }
     }
   }
 
@@ -230,8 +286,18 @@ const analyzeProposal = async () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Create New Proposal</h1>
           <p className="text-xl text-gray-400">
-            Submit your proposal for AI analysis and community voting
+            Submit your proposal for AI analysis and community voting on Mantle Sepolia
           </p>
+        </div>
+
+        {/* Debug Info */}
+        <div className="mb-4 bg-gray-800 border border-gray-700 rounded-lg p-3">
+          <div className="text-xs text-gray-400 space-y-1">
+            <div>Connected: {isConnected ? '✅' : '❌'}</div>
+            <div>Chain ID: {chainId} {chainId === 5003 ? '✅' : '❌ (Need 5003)'}</div>
+            <div>Contract: {import.meta.env.VITE_CONTRACT_ADDRESS ? '✅' : '❌ Not Set'}</div>
+            <div>AI Analysis: {aiAnalysis ? '✅' : '❌'}</div>
+          </div>
         </div>
 
         {/* Network Error Alert */}
@@ -250,6 +316,18 @@ const analyzeProposal = async () => {
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Wrong Network Alert */}
+        {isConnected && chainId !== 5003 && (
+          <div className="mb-8 bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-2" />
+              <span className="text-yellow-300">
+                Please switch to Mantle Sepolia Testnet (Chain ID: 5003). Current: {chainId}
+              </span>
             </div>
           </div>
         )}
@@ -506,8 +584,12 @@ const analyzeProposal = async () => {
                       </button>
                       <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isLoading || !isConnected || chainId !== 5003 || !aiAnalysis}
                         className="inline-flex items-center px-8 py-3 bg-mantle-600 hover:bg-mantle-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                        onClick={(e) => {
+                          console.log('🔵 Button clicked directly!')
+                          // The handleSubmit will be called by the form
+                        }}
                       >
                         {isLoading ? (
                           <>
