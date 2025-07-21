@@ -25,48 +25,34 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Simple JSON parsing function WITHOUT regex
 // Enhanced JSON parsing function in CreateProposal.jsx
+// Ultra-simple version - GUARANTEED NO SYNTAX ERRORS
 function parseGeminiResponse(text) {
   try {
     console.log('Original Gemini response:', text);
     
-    // Clean the text using only string methods
-    let cleanText = text.trim();
+    // Find the JSON object boundaries
+    const startIndex = text.indexOf('{');
+    const endIndex = text.lastIndexOf('}');
     
-    // Remove markdown code blocks
-    cleanText = cleanText.replace(/```json/gi, '');
-    cleanText = cleanText.replace(```)
-    cleanText = cleanText.replace(/```/g, '');
-    cleanText = cleanText.replace(/`/g, '');
-    
-    // Remove extra whitespace
-    cleanText = cleanText.trim();
-    
-    // Remove leading "json" text if present
-    if (cleanText.toLowerCase().startsWith('json')) {
-      cleanText = cleanText.substring(4).trim();
+    if (startIndex === -1 || endIndex === -1) {
+      throw new Error('No JSON object found in response');
     }
     
-    // Find JSON object boundaries
-    const firstBrace = cleanText.indexOf('{');
-    const lastBrace = cleanText.lastIndexOf('}');
+    // Extract just the JSON part
+    const jsonString = text.substring(startIndex, endIndex + 1);
+    console.log('Extracted JSON string:', jsonString);
     
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-    }
-    
-    console.log('Cleaned text for parsing:', cleanText);
-    
-    // Parse the cleaned JSON
-    const parsed = JSON.parse(cleanText);
+    // Parse the JSON
+    const parsed = JSON.parse(jsonString);
     console.log('Successfully parsed JSON:', parsed);
     
     return parsed;
   } catch (error) {
     console.error('JSON parsing failed:', error);
-    console.error('Text that failed to parse:', cleanText);
-    throw error; // Throw the error so the catch block in analyzeProposal handles it
+    throw error;
   }
 }
+
 
 
 // AI Summarization endpoint
