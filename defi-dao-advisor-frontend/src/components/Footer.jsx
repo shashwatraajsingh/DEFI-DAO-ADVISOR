@@ -1,4 +1,4 @@
-// src/components/Footer.jsx
+
 import React from 'react'
 import { Link } from 'react-router-dom'
 
@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-8 h-8 bg-mantle-gradient rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-Web3-gradient rounded-lg flex items-center justify-center">
                 <div className="w-3 h-3 bg-white rounded-full opacity-90"></div>
               </div>
               <span className="text-xl font-bold text-white">DeFi DAO Advisor</span>
@@ -20,7 +20,7 @@ const Footer = () => {
               through stake-based voting and intelligent proposal analysis.
             </p>
             <p className="text-sm text-gray-500">
-              Built for Mantle Network Cookathon 2025
+              Built for Web3 Network  
             </p>
           </div>
 
@@ -51,7 +51,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-gray-800 text-center">
           <p className="text-gray-400 text-sm">
-            © 2025 DeFi DAO Advisor. Built with ❤️ for the Mantle Network ecosystem by Shashwat Raj Singh.
+            © 2025 DeFi DAO Advisor. Built with ❤️ for the Web3 Network ecosystem by Shashwat Raj Singh.
           </p>
         </div>
       </div>

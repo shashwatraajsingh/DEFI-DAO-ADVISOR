@@ -1,6 +1,6 @@
 import React from 'react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
-import { sepolia } from 'wagmi/chains'  // ✅ Import Sepolia instead of defineChain
+import { Web3 } from 'wagmi/chains'  // ✅ Import Web3 instead of defineChain
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -24,19 +24,19 @@ if (projectId === 'demo-project-id') {
   console.warn('Using demo project ID. Please set VITE_WALLET_CONNECT_PROJECT_ID in your .env file')
 }
 
-// Configure wallet connectors for Sepolia testnet
+// Configure wallet connectors for Web3 testnet
 const { connectors } = getDefaultWallets({
   appName: 'DeFi DAO Advisor',
   projectId: projectId,
-  chains: [sepolia], // ✅ Use Sepolia testnet
+  chains: [Web3], // ✅ Use Web3 testnet
 })
 
-// Create Wagmi config with Sepolia Testnet
+// Create Wagmi config with Web3 Testnet
 const config = createConfig({
-  chains: [sepolia], // ✅ Use Sepolia testnet
+  chains: [Web3], // ✅ Use Web3 testnet
   connectors,
   transports: {
-    [sepolia.id]: http(), // ✅ Use default Sepolia RPC
+    [Web3.id]: http(), // ✅ Use default Web3 RPC
   },
 })
 
@@ -57,8 +57,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
         <RainbowKitProvider
-          chains={[sepolia]} // ✅ Use Sepolia testnet
-          initialChain={sepolia} // ✅ Set initial chain to Sepolia
+          chains={[Web3]} // ✅ Use Web3 testnet
+          initialChain={Web3} // ✅ Set initial chain to Web3
         >
           <Router>
             <div className="min-h-screen bg-gray-900">

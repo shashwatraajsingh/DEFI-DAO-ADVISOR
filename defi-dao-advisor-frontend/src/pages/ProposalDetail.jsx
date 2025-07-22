@@ -1,4 +1,4 @@
-// src/pages/ProposalDetail.jsx
+
 import React, { useState } from 'react'
 import { useWriteContract, useAccount, useChainId } from 'wagmi'
 import { toast } from 'react-hot-toast'
@@ -18,7 +18,7 @@ const ProposalDetail = () => {
     }
 
     if (chainId !== 11155111) {
-      toast.error('Please switch to Sepolia Testnet')
+      toast.error('Please switch to Web3 Testnet')
       return
     }
 
@@ -39,7 +39,7 @@ const ProposalDetail = () => {
           }
         ],
         functionName: 'voteProposal',
-        args: [0, voteSupport, BigInt(stakeAmount + '000000000000000000')], // Convert to wei
+        args: [0, voteSupport, BigInt(stakeAmount + '000000000000000000')], 
       })
       
       toast.success('Vote submitted successfully!')
@@ -106,7 +106,7 @@ const ProposalDetail = () => {
           <button
             onClick={handleVote}
             disabled={isPending || !isConnected}
-            className="w-full px-6 py-3 bg-mantle-600 hover:bg-mantle-700 text-white rounded-lg font-medium disabled:opacity-50"
+            className="w-full px-6 py-3 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium disabled:opacity-50"
           >
             {isPending ? 'Submitting Vote...' : 'Submit Vote'}
           </button>

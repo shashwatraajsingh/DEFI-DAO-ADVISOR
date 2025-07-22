@@ -17,7 +17,7 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["defi", "dao", "blockchain", "ai", "gemini", "mantle"],
+  "keywords": ["defi", "dao", "blockchain", "ai", "gemini", "Web3"],
   "author": "Your Name",
   "license": "MIT"
 }

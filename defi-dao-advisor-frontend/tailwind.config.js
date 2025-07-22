@@ -8,7 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        mantle: {
+        Web3: {
           50: '#f0fdfa',
           100: '#ccfbf1',
           200: '#99f6e4',

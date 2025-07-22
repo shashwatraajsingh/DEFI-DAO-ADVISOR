@@ -1,4 +1,4 @@
-// backend/server.js
+
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
