@@ -28,15 +28,15 @@ if (projectId === 'demo-project-id') {
 const { connectors } = getDefaultWallets({
   appName: 'DeFi DAO Advisor',
   projectId: projectId,
-  chains: [sepolia], // ✅ Use Sepolia testnet
+  chains: [sepolia], // Use Sepolia testnet
 })
 
 // Create Wagmi config with Sepolia Testnet
 const config = createConfig({
-  chains: [sepolia], // ✅ Use Sepolia testnet
+  chains: [sepolia], // Use Sepolia testnet
   connectors,
   transports: {
-    [sepolia.id]: http(), // ✅ Use default Sepolia RPC
+    [sepolia.id]: http(), // Use default Sepolia RPC
   },
 })
 
@@ -57,8 +57,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
         <RainbowKitProvider
-          chains={[sepolia]} // ✅ Use Sepolia testnet
-          initialChain={sepolia} // ✅ Set initial chain to Sepolia
+          chains={[sepolia]} // Use Sepolia testnet
+          initialChain={sepolia} //  Set initial chain to Sepolia
         >
           <Router>
             <div className="min-h-screen bg-gray-900">
