@@ -22,24 +22,87 @@ const CreateProposal = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [step, setStep] = useState(1)
   const [networkError, setNetworkError] = useState(null)
+const { isConnected, address } = useAccount() // ✅ Added 'address'
+const chainId = useChainId()
+const { data: hash, writeContract, isPending } = useWriteContract()
 
-  const { isConnected } = useAccount()
-  const chainId = useChainId()
-  const { data: hash, writeContract, isPending } = useWriteContract()
+const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  hash,
+})
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  })
-
-  // Watch for transaction success
-  React.useEffect(() => {
-    if (isConfirmed) {
-      toast.success('Proposal created successfully!')
-      setFormData({ title: '', description: '', proposalType: 'governance' })
-      setAiAnalysis(null)
-      setStep(1)
+// Watch for transaction success and store proposal
+React.useEffect(() => {
+  if (isConfirmed) {
+    console.log('🎉 Transaction confirmed! Storing proposal...')
+    console.log('👤 Connected address:', address) // Debug log
+    
+    // Create the proposal object to store
+    const newProposal = {
+      id: Date.now(),
+      title: formData.title,
+      description: formData.description,
+      proposer: address || "0x1234...5678",
+      type: formData.proposalType,
+      status: "pending",
+      yesVotes: 0,
+      noVotes: 0,
+      totalStaked: 0,
+      deadline: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      riskLevel: aiAnalysis?.riskLevel || "Medium",
+      aiSummary: aiAnalysis?.tldr || "AI analysis completed",
+      createdAt: Date.now(),
+      transactionHash: hash
     }
-  }, [isConfirmed])
+
+    try {
+      // Get existing proposals
+      const existingProposals = JSON.parse(localStorage.getItem('submittedProposals') || '[]')
+      
+      // Add new proposal
+      existingProposals.push(newProposal)
+      
+      // Store updated array
+      localStorage.setItem('submittedProposals', JSON.stringify(existingProposals))
+      
+      // Store as recent for immediate display
+      localStorage.setItem('recentProposal', JSON.stringify(newProposal))
+      
+      console.log('💾 Proposal stored successfully:', newProposal)
+      console.log('📊 Total proposals now:', existingProposals.length)
+      
+      // Force storage event for same-tab updates
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'submittedProposals',
+        newValue: JSON.stringify(existingProposals)
+      }))
+      
+    } catch (error) {
+      console.error('❌ Error storing proposal:', error)
+    }
+
+    toast.success('Proposal created and stored successfully!')
+    setFormData({ title: '', description: '', proposalType: 'governance' })
+    setAiAnalysis(null)
+    setStep(1)
+  }
+}, [isConfirmed, formData, aiAnalysis, address, hash])
+
+// Debug localStorage changes
+React.useEffect(() => {
+  const logStorage = () => {
+    const stored = localStorage.getItem('submittedProposals')
+    const recent = localStorage.getItem('recentProposal')
+    console.log('📦 Stored proposals count:', stored ? JSON.parse(stored).length : 0)
+    console.log('🆕 Recent proposal:', recent ? JSON.parse(recent).title : 'None')
+  }
+  
+  logStorage() // Initial log
+  
+  const interval = setInterval(logStorage, 5000) // Log every 5 seconds
+  return () => clearInterval(interval)
+}, [])
+
+
 
   const proposalTypes = [
     { 

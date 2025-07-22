@@ -9,14 +9,15 @@ import {
   MagnifyingGlassIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline'
-import { useContractRead } from 'wagmi'
+import { useReadContract, useAccount } from 'wagmi'
 
 const ProposalList = () => {
   const [proposals, setProposals] = useState([])
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const { isConnected } = useAccount()
 
-  // Mock data for demonstration
+  // Mock data for demonstration (initial proposals)
   const mockProposals = [
     {
       id: 1,
@@ -28,9 +29,10 @@ const ProposalList = () => {
       yesVotes: 1250000,
       noVotes: 850000,
       totalStaked: 2100000,
-      deadline: Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days from now
+      deadline: Date.now() + 5 * 24 * 60 * 60 * 1000,
       riskLevel: "Medium",
-      aiSummary: "This proposal aims to increase staking rewards to improve liquidity attraction."
+      aiSummary: "This proposal aims to increase staking rewards to improve liquidity attraction.",
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000 // 2 days ago
     },
     {
       id: 2,
@@ -42,9 +44,10 @@ const ProposalList = () => {
       yesVotes: 2800000,
       noVotes: 1200000,
       totalStaked: 4000000,
-      deadline: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
+      deadline: Date.now() - 2 * 24 * 60 * 60 * 1000,
       riskLevel: "High",
-      aiSummary: "Technical upgrade to enable cross-chain functionality with security considerations."
+      aiSummary: "Technical upgrade to enable cross-chain functionality with security considerations.",
+      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000 // 7 days ago
     },
     {
       id: 3,
@@ -56,22 +59,76 @@ const ProposalList = () => {
       yesVotes: 950000,
       noVotes: 650000,
       totalStaked: 1600000,
-      deadline: Date.now() + 3 * 24 * 60 * 60 * 1000, // 3 days from now
+      deadline: Date.now() + 3 * 24 * 60 * 60 * 1000,
       riskLevel: "Low",
-      aiSummary: "Partnership proposal to expand ecosystem integration and user benefits."
+      aiSummary: "Partnership proposal to expand ecosystem integration and user benefits.",
+      createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000 // 1 day ago
     }
   ]
 
+  // Load proposals (mock data + locally stored submissions)
   useEffect(() => {
-    // In a real app, fetch from contract
-    setProposals(mockProposals)
+    loadAllProposals()
+    
+    // Listen for new proposals from localStorage
+    const handleStorageChange = () => {
+      loadAllProposals()
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Also check for updates every 5 seconds (in case same tab submitted)
+    const interval = setInterval(loadAllProposals, 5000)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
   }, [])
+
+  const loadAllProposals = () => {
+    try {
+      // Get submitted proposals from localStorage
+      const storedProposals = localStorage.getItem('submittedProposals')
+      const submittedProposals = storedProposals ? JSON.parse(storedProposals) : []
+      
+      // Get recent proposal from single submission
+      const recentProposal = localStorage.getItem('recentProposal')
+      const recent = recentProposal ? JSON.parse(recentProposal) : null
+      
+      // Combine all proposals
+      let allProposals = [...mockProposals]
+      
+      // Add submitted proposals
+      submittedProposals.forEach(proposal => {
+        if (!allProposals.find(p => p.id === proposal.id)) {
+          allProposals.push(proposal)
+        }
+      })
+      
+      // Add recent proposal if it exists and isn't already included
+      if (recent && !allProposals.find(p => p.id === recent.id)) {
+        allProposals.push(recent)
+      }
+      
+      // Sort by creation date (newest first)
+      allProposals.sort((a, b) => (b.createdAt || b.id) - (a.createdAt || a.id))
+      
+      setProposals(allProposals)
+      console.log('Loaded proposals:', allProposals.length)
+      
+    } catch (error) {
+      console.error('Error loading proposals:', error)
+      setProposals(mockProposals)
+    }
+  }
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-blue-900/30 text-blue-400 border-blue-800'
       case 'passed': return 'bg-green-900/30 text-green-400 border-green-800'
       case 'rejected': return 'bg-red-900/30 text-red-400 border-red-800'
+      case 'pending': return 'bg-yellow-900/30 text-yellow-400 border-yellow-800'
       default: return 'bg-gray-900/30 text-gray-400 border-gray-800'
     }
   }
@@ -124,6 +181,9 @@ const ProposalList = () => {
           <p className="text-xl text-gray-400">
             Browse and vote on community proposals with AI-powered insights
           </p>
+          <div className="mt-4 text-sm text-gray-500">
+            Showing {proposals.length} total proposals • {filteredProposals.length} match your filters
+          </div>
         </div>
 
         {/* Filters and Search */}
@@ -151,6 +211,7 @@ const ProposalList = () => {
               >
                 <option value="all">All Proposals</option>
                 <option value="active">Active</option>
+                <option value="pending">Pending</option>
                 <option value="passed">Passed</option>
                 <option value="rejected">Rejected</option>
               </select>
@@ -185,6 +246,11 @@ const ProposalList = () => {
                       <UserIcon className="h-4 w-4 mr-1" />
                       {proposal.proposer}
                     </div>
+                    {proposal.createdAt && (
+                      <div className="ml-3 text-xs text-gray-500">
+                        {new Date(proposal.createdAt).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
 
                   <h3 className="text-xl font-semibold text-white mb-2 hover:text-mantle-300 transition-colors">
@@ -198,48 +264,52 @@ const ProposalList = () => {
                   </p>
 
                   {/* AI Summary */}
-                  <div className="bg-mantle-900/30 rounded-lg p-3 border border-mantle-800 mb-4">
-                    <div className="flex items-center mb-2">
-                      <SparklesIcon className="h-4 w-4 text-mantle-400 mr-2" />
-                      <span className="text-sm font-medium text-mantle-300">AI Summary</span>
-                      <span className={`ml-2 text-xs font-medium ${getRiskColor(proposal.riskLevel)}`}>
-                        {proposal.riskLevel} Risk
-                      </span>
+                  {proposal.aiSummary && (
+                    <div className="bg-mantle-900/30 rounded-lg p-3 border border-mantle-800 mb-4">
+                      <div className="flex items-center mb-2">
+                        <SparklesIcon className="h-4 w-4 text-mantle-400 mr-2" />
+                        <span className="text-sm font-medium text-mantle-300">AI Summary</span>
+                        <span className={`ml-2 text-xs font-medium ${getRiskColor(proposal.riskLevel)}`}>
+                          {proposal.riskLevel} Risk
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-300">{proposal.aiSummary}</p>
                     </div>
-                    <p className="text-sm text-gray-300">{proposal.aiSummary}</p>
-                  </div>
+                  )}
                 </div>
 
                 {/* Right Content */}
                 <div className="lg:ml-8 lg:w-80">
-                  {/* Voting Stats */}
-                  <div className="bg-gray-900 rounded-lg p-4 mb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-gray-400">Total Staked</span>
-                      <span className="text-sm font-medium text-white">
-                        {(proposal.totalStaked / 1000000).toFixed(1)}M tokens
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-green-400">Yes ({((proposal.yesVotes / proposal.totalStaked) * 100).toFixed(1)}%)</span>
-                        <span className="text-red-400">No ({((proposal.noVotes / proposal.totalStaked) * 100).toFixed(1)}%)</span>
+                  {/* Voting Stats - Only show if votes exist */}
+                  {proposal.totalStaked && (
+                    <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-gray-400">Total Staked</span>
+                        <span className="text-sm font-medium text-white">
+                          {(proposal.totalStaked / 1000000).toFixed(1)}M tokens
+                        </span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-l-full"
-                          style={{ width: `${(proposal.yesVotes / proposal.totalStaked) * 100}%` }}
-                        ></div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-400">Yes ({((proposal.yesVotes / proposal.totalStaked) * 100).toFixed(1)}%)</span>
+                          <span className="text-red-400">No ({((proposal.noVotes / proposal.totalStaked) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-l-full"
+                            style={{ width: `${(proposal.yesVotes / proposal.totalStaked) * 100}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Time Remaining */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center text-sm text-gray-400">
                       <ClockIcon className="h-4 w-4 mr-1" />
-                      {getTimeRemaining(proposal.deadline)}
+                      {proposal.deadline ? getTimeRemaining(proposal.deadline) : 'No deadline set'}
                     </div>
                     <Link
                       to={`/proposal/${proposal.id}`}
@@ -261,7 +331,11 @@ const ProposalList = () => {
             <div className="text-gray-400 mb-4">
               <ChartBarIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <h3 className="text-xl font-medium mb-2">No proposals found</h3>
-              <p>Try adjusting your search or filter criteria</p>
+              <p>
+                {proposals.length === 0 
+                  ? "No proposals have been created yet." 
+                  : "Try adjusting your search or filter criteria"}
+              </p>
             </div>
             <Link
               to="/create"
