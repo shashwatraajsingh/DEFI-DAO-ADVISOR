@@ -1,14 +1,15 @@
-
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi' // ✅ Remove useNetwork, add useChainId
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [backendStatus, setBackendStatus] = useState('checking')
   const location = useLocation()
   const { isConnected } = useAccount()
+  const chainId = useChainId() // ✅ Use useChainId instead of useNetwork
 
   const navigation = [
     { name: 'Home', href: '/', current: location.pathname === '/' },
@@ -16,6 +17,22 @@ const Header = () => {
     { name: 'Create', href: '/create', current: location.pathname === '/create' },
     ...(isConnected ? [{ name: 'Dashboard', href: '/dashboard', current: location.pathname === '/dashboard' }] : []),
   ]
+
+  // Check backend health
+  useEffect(() => {
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/health`)
+        setBackendStatus(response.ok ? 'connected' : 'disconnected')
+      } catch (error) {
+        setBackendStatus('disconnected')
+      }
+    }
+    
+    checkBackendHealth()
+    const interval = setInterval(checkBackendHealth, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 backdrop-blur-sm">
@@ -37,8 +54,8 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-1">
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-baseline space-x-1">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -53,10 +70,29 @@ const Header = () => {
                 </Link>
               ))}
             </div>
-          </div>
 
-          {/* Connect Button */}
-          <div className="hidden md:block">
+            {/* Network Status */}
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${
+                chainId === 11155111 ? 'bg-green-500' : 'bg-yellow-500' // ✅ Use chainId directly
+              }`}></div>
+              <span className="text-xs text-gray-400">
+                {chainId === 11155111 ? 'Sepolia' : 'Wrong Network'} {/* ✅ Use chainId directly */}
+              </span>
+            </div>
+
+            {/* Backend Status */}
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${
+                backendStatus === 'connected' ? 'bg-green-500' : 
+                backendStatus === 'disconnected' ? 'bg-red-500' : 'bg-yellow-500'
+              }`}></div>
+              <span className="text-xs text-gray-400">
+                {backendStatus === 'connected' ? 'AI Online' : 
+                 backendStatus === 'disconnected' ? 'AI Offline' : 'Checking...'}
+              </span>
+            </div>
+
             <ConnectButton />
           </div>
 
@@ -93,6 +129,25 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile Status Indicators */}
+              <div className="pt-2 pb-2 border-t border-gray-800">
+                <div className="px-3 py-2 text-xs text-gray-400 space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      chainId === 11155111 ? 'bg-green-500' : 'bg-yellow-500' // ✅ Use chainId directly
+                    }`}></div>
+                    <span>Network: {chainId === 11155111 ? 'Sepolia' : 'Wrong Network'}</span> {/* ✅ Use chainId directly */}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      backendStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
+                    <span>AI: {backendStatus === 'connected' ? 'Online' : 'Offline'}</span>
+                  </div>
+                </div>
+              </div>
+              
               <div className="pt-4 pb-3 border-t border-gray-800">
                 <ConnectButton />
               </div>

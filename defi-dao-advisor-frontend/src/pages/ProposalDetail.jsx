@@ -1,122 +1,115 @@
 // src/pages/ProposalDetail.jsx
-import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { 
-  ClockIcon, 
-  UserIcon, 
-  SparklesIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ChartBarIcon
-} from '@heroicons/react/24/outline'
+import React, { useState } from 'react'
+import { useWriteContract, useAccount, useChainId } from 'wagmi'
+import { toast } from 'react-hot-toast'
 
 const ProposalDetail = () => {
-  const { id } = useParams()
+  const [voteSupport, setVoteSupport] = useState(true) // true = Yes, false = No
+  const [stakeAmount, setStakeAmount] = useState('100')
   
-  // Mock data for demonstration
-  const proposal = {
-    id: parseInt(id),
-    title: "Increase Staking Rewards by 5%",
-    description: "This proposal suggests increasing the current staking rewards from 10% to 15% APY to attract more liquidity providers.",
-    proposer: "0x1234567890abcdef1234567890abcdef12345678",
-    status: "active",
-    yesVotes: 1250000,
-    noVotes: 850000,
-    totalStaked: 2100000,
-    deadline: Date.now() + 5 * 24 * 60 * 60 * 1000,
-    riskLevel: "Medium",
-    aiAnalysis: {
-      tldr: "This proposal aims to increase staking rewards from 10% to 15% APY to attract more liquidity.",
-      riskLevel: "Medium",
-      riskExplanation: "While increasing rewards can attract more users, it will impact treasury sustainability.",
-      keyConsiderations: [
-        "Treasury sustainability must be monitored closely",
-        "Market conditions may affect the effectiveness",
-        "Consider gradual implementation"
-      ]
-    }
-  }
+  const { isConnected, address } = useAccount()
+  const chainId = useChainId()
+  const { writeContract, isPending } = useWriteContract()
 
-  const getTimeRemaining = (deadline) => {
-    const now = Date.now()
-    const remaining = deadline - now
-    
-    if (remaining <= 0) return 'Voting ended'
-    
-    const days = Math.floor(remaining / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    
-    if (days > 0) return `${days}d ${hours}h remaining`
-    return `${hours}h remaining`
+  const handleVote = async () => {
+    if (!isConnected) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    if (chainId !== 11155111) {
+      toast.error('Please switch to Sepolia Testnet')
+      return
+    }
+
+    try {
+      await writeContract({
+        address: import.meta.env.VITE_CONTRACT_ADDRESS,
+        abi: [
+          {
+            "inputs": [
+              {"internalType": "uint256", "name": "_proposalId", "type": "uint256"},
+              {"internalType": "bool", "name": "_support", "type": "bool"},
+              {"internalType": "uint256", "name": "_stakeAmount", "type": "uint256"}
+            ],
+            "name": "voteProposal",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+          }
+        ],
+        functionName: 'voteProposal',
+        args: [0, voteSupport, BigInt(stakeAmount + '000000000000000000')], // Convert to wei
+      })
+      
+      toast.success('Vote submitted successfully!')
+    } catch (error) {
+      console.error('Voting error:', error)
+      toast.error('Failed to submit vote')
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-900 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4">{proposal.title}</h1>
-          <div className="flex items-center space-x-4 text-sm text-gray-400">
-            <div className="flex items-center">
-              <UserIcon className="h-4 w-4 mr-1" />
-              {proposal.proposer}
-            </div>
-            <div className="flex items-center">
-              <ClockIcon className="h-4 w-4 mr-1" />
-              {getTimeRemaining(proposal.deadline)}
-            </div>
-          </div>
-        </div>
-
-        {/* AI Analysis */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-8">
-          <div className="flex items-center mb-6">
-            <SparklesIcon className="h-6 w-6 text-mantle-400 mr-3" />
-            <h2 className="text-xl font-semibold text-white">AI Analysis</h2>
-          </div>
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-white mb-8">Vote on Proposal</h1>
+        
+        {/* Voting Interface */}
+        <div className="bg-gray-800 rounded-xl p-6 mb-8">
+          <h3 className="text-xl font-semibold text-white mb-4">Cast Your Vote</h3>
           
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-3">TL;DR Summary</h3>
-              <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                <p className="text-gray-200">{proposal.aiAnalysis.tldr}</p>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Risk Assessment</h3>
-              <div className="flex items-start space-x-4">
-                <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border bg-yellow-900/30 text-yellow-400 border-yellow-800">
-                  <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
-                  {proposal.aiAnalysis.riskLevel} Risk
-                </div>
-                <div className="flex-1">
-                  <p className="text-gray-300 text-sm">{proposal.aiAnalysis.riskExplanation}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Key Considerations</h3>
-              <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                <ul className="space-y-3">
-                  {proposal.aiAnalysis.keyConsiderations.map((consideration, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircleIcon className="h-5 w-5 text-mantle-400 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-300 text-sm">{consideration}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {/* Vote Choice */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-3">
+              Your Vote
+            </label>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setVoteSupport(true)}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  voteSupport 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                ✅ Yes (Support)
+              </button>
+              <button
+                onClick={() => setVoteSupport(false)}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  !voteSupport 
+                    ? 'bg-red-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                ❌ No (Against)
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Proposal Description */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">Proposal Details</h2>
-          <div className="text-gray-300 leading-relaxed">
-            {proposal.description}
+          {/* Stake Amount */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-3">
+              Stake Amount (DST tokens)
+            </label>
+            <input
+              type="number"
+              value={stakeAmount}
+              onChange={(e) => setStakeAmount(e.target.value)}
+              min="100"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+              placeholder="Minimum 100 tokens"
+            />
           </div>
+
+          {/* Submit Vote */}
+          <button
+            onClick={handleVote}
+            disabled={isPending || !isConnected}
+            className="w-full px-6 py-3 bg-mantle-600 hover:bg-mantle-700 text-white rounded-lg font-medium disabled:opacity-50"
+          >
+            {isPending ? 'Submitting Vote...' : 'Submit Vote'}
+          </button>
         </div>
       </div>
     </div>
