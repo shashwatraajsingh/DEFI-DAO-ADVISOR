@@ -22,87 +22,86 @@ const CreateProposal = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [step, setStep] = useState(1)
   const [networkError, setNetworkError] = useState(null)
-const { isConnected, address } = useAccount() // ✅ Added 'address'
-const chainId = useChainId()
-const { data: hash, writeContract, isPending } = useWriteContract()
 
-const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-  hash,
-})
+  const { isConnected, address } = useAccount()
+  const chainId = useChainId()
+  const { data: hash, writeContract, isPending } = useWriteContract()
 
-// Watch for transaction success and store proposal
-React.useEffect(() => {
-  if (isConfirmed) {
-    console.log('🎉 Transaction confirmed! Storing proposal...')
-    console.log('👤 Connected address:', address) // Debug log
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  // Watch for transaction success and store proposal
+  React.useEffect(() => {
+    if (isConfirmed) {
+      console.log('🎉 Transaction confirmed! Storing proposal...')
+      console.log('👤 Connected address:', address)
+      
+      // Create the proposal object to store
+      const newProposal = {
+        id: Date.now(),
+        title: formData.title,
+        description: formData.description,
+        proposer: address || "0x1234...5678",
+        type: formData.proposalType,
+        status: "pending",
+        yesVotes: 0,
+        noVotes: 0,
+        totalStaked: 0,
+        deadline: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        riskLevel: aiAnalysis?.riskLevel || "Medium",
+        aiSummary: aiAnalysis?.tldr || "AI analysis completed",
+        createdAt: Date.now(),
+        transactionHash: hash
+      }
+
+      try {
+        // Get existing proposals
+        const existingProposals = JSON.parse(localStorage.getItem('submittedProposals') || '[]')
+        
+        // Add new proposal
+        existingProposals.push(newProposal)
+        
+        // Store updated array
+        localStorage.setItem('submittedProposals', JSON.stringify(existingProposals))
+        
+        // Store as recent for immediate display
+        localStorage.setItem('recentProposal', JSON.stringify(newProposal))
+        
+        console.log('💾 Proposal stored successfully:', newProposal)
+        console.log('📊 Total proposals now:', existingProposals.length)
+        
+        // Force storage event for same-tab updates
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'submittedProposals',
+          newValue: JSON.stringify(existingProposals)
+        }))
+        
+      } catch (error) {
+        console.error('❌ Error storing proposal:', error)
+      }
+
+      toast.success('Proposal created and stored successfully!')
+      setFormData({ title: '', description: '', proposalType: 'governance' })
+      setAiAnalysis(null)
+      setStep(1)
+    }
+  }, [isConfirmed, formData, aiAnalysis, address, hash])
+
+  // Debug localStorage changes
+  React.useEffect(() => {
+    const logStorage = () => {
+      const stored = localStorage.getItem('submittedProposals')
+      const recent = localStorage.getItem('recentProposal')
+      console.log('📦 Stored proposals count:', stored ? JSON.parse(stored).length : 0)
+      console.log('🆕 Recent proposal:', recent ? JSON.parse(recent).title : 'None')
+    }
     
-    // Create the proposal object to store
-    const newProposal = {
-      id: Date.now(),
-      title: formData.title,
-      description: formData.description,
-      proposer: address || "0x1234...5678",
-      type: formData.proposalType,
-      status: "pending",
-      yesVotes: 0,
-      noVotes: 0,
-      totalStaked: 0,
-      deadline: Date.now() + 7 * 24 * 60 * 60 * 1000,
-      riskLevel: aiAnalysis?.riskLevel || "Medium",
-      aiSummary: aiAnalysis?.tldr || "AI analysis completed",
-      createdAt: Date.now(),
-      transactionHash: hash
-    }
-
-    try {
-      // Get existing proposals
-      const existingProposals = JSON.parse(localStorage.getItem('submittedProposals') || '[]')
-      
-      // Add new proposal
-      existingProposals.push(newProposal)
-      
-      // Store updated array
-      localStorage.setItem('submittedProposals', JSON.stringify(existingProposals))
-      
-      // Store as recent for immediate display
-      localStorage.setItem('recentProposal', JSON.stringify(newProposal))
-      
-      console.log('💾 Proposal stored successfully:', newProposal)
-      console.log('📊 Total proposals now:', existingProposals.length)
-      
-      // Force storage event for same-tab updates
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'submittedProposals',
-        newValue: JSON.stringify(existingProposals)
-      }))
-      
-    } catch (error) {
-      console.error('❌ Error storing proposal:', error)
-    }
-
-    toast.success('Proposal created and stored successfully!')
-    setFormData({ title: '', description: '', proposalType: 'governance' })
-    setAiAnalysis(null)
-    setStep(1)
-  }
-}, [isConfirmed, formData, aiAnalysis, address, hash])
-
-// Debug localStorage changes
-React.useEffect(() => {
-  const logStorage = () => {
-    const stored = localStorage.getItem('submittedProposals')
-    const recent = localStorage.getItem('recentProposal')
-    console.log('📦 Stored proposals count:', stored ? JSON.parse(stored).length : 0)
-    console.log('🆕 Recent proposal:', recent ? JSON.parse(recent).title : 'None')
-  }
-  
-  logStorage() // Initial log
-  
-  const interval = setInterval(logStorage, 5000) // Log every 5 seconds
-  return () => clearInterval(interval)
-}, [])
-
-
+    logStorage() // Initial log
+    
+    const interval = setInterval(logStorage, 5000) // Log every 5 seconds
+    return () => clearInterval(interval)
+  }, [])
 
   const proposalTypes = [
     { 
@@ -251,9 +250,10 @@ React.useEffect(() => {
       return
     }
 
-    if (chainId !== 5003) {
+    // ✅ Updated for Sepolia chain ID
+    if (chainId !== 11155111) { 
       console.error('❌ Wrong network:', chainId)
-      toast.error('Please switch to Mantle Sepolia Testnet (Chain ID: 5003)')
+      toast.error('Please switch to Sepolia Testnet (Chain ID: 11155111)') 
       return
     }
 
@@ -349,7 +349,7 @@ React.useEffect(() => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Create New Proposal</h1>
           <p className="text-xl text-gray-400">
-            Submit your proposal for AI analysis and community voting on Mantle Sepolia
+            Submit your proposal for AI analysis and community voting on Sepolia {/* ✅ Updated text */}
           </p>
         </div>
 
@@ -357,7 +357,7 @@ React.useEffect(() => {
         <div className="mb-4 bg-gray-800 border border-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 space-y-1">
             <div>Connected: {isConnected ? '✅' : '❌'}</div>
-            <div>Chain ID: {chainId} {chainId === 5003 ? '✅' : '❌ (Need 5003)'}</div>
+            <div>Chain ID: {chainId} {chainId === 11155111 ? '✅' : '❌ (Need 11155111)'}</div> {/* ✅ Updated chain ID */}
             <div>Contract: {import.meta.env.VITE_CONTRACT_ADDRESS ? '✅' : '❌ Not Set'}</div>
             <div>AI Analysis: {aiAnalysis ? '✅' : '❌'}</div>
           </div>
@@ -384,12 +384,12 @@ React.useEffect(() => {
         )}
 
         {/* Wrong Network Alert */}
-        {isConnected && chainId !== 5003 && (
+        {isConnected && chainId !== 11155111 && ( /* ✅ Updated chain ID check */
           <div className="mb-8 bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
             <div className="flex items-center">
               <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-2" />
               <span className="text-yellow-300">
-                Please switch to Mantle Sepolia Testnet (Chain ID: 5003). Current: {chainId}
+                Please switch to Sepolia Testnet (Chain ID: 11155111). Current: {chainId} {/* ✅ Updated network message */}
               </span>
             </div>
           </div>
@@ -647,7 +647,7 @@ React.useEffect(() => {
                       </button>
                       <button
                         type="submit"
-                        disabled={isLoading || !isConnected || chainId !== 5003 || !aiAnalysis}
+                        disabled={isLoading || !isConnected || chainId !== 11155111 || !aiAnalysis} /* ✅ Updated chain ID check */
                         className="inline-flex items-center px-8 py-3 bg-mantle-600 hover:bg-mantle-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                         onClick={(e) => {
                           console.log('🔵 Button clicked directly!')

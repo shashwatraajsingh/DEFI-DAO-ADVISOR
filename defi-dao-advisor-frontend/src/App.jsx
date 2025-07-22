@@ -1,6 +1,6 @@
 import React from 'react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
-import { defineChain } from 'viem'
+import { sepolia } from 'wagmi/chains'  // ✅ Import Sepolia instead of defineChain
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -16,33 +16,6 @@ import ProposalList from './pages/ProposalList'
 import '@rainbow-me/rainbowkit/styles.css'
 import './App.css'
 
-// Define the correct Mantle Sepolia Testnet
-const mantleSepoliaTestnet = defineChain({
-  id: 5003,
-  name: 'Mantle Sepolia Testnet',
-  network: 'mantle-sepolia',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'MNT',
-    symbol: 'MNT',
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://rpc.sepolia.mantle.xyz'],
-    },
-    public: {
-      http: ['https://rpc.sepolia.mantle.xyz'],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'Mantle Sepolia Explorer',
-      url: 'https://sepolia.mantlescan.xyz',
-    },
-  },
-  testnet: true,
-})
-
 // Get project ID with fallback
 const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || 'demo-project-id'
 
@@ -51,19 +24,19 @@ if (projectId === 'demo-project-id') {
   console.warn('Using demo project ID. Please set VITE_WALLET_CONNECT_PROJECT_ID in your .env file')
 }
 
-// Configure wallet connectors using getDefaultWallets (simpler approach)
+// Configure wallet connectors for Sepolia testnet
 const { connectors } = getDefaultWallets({
   appName: 'DeFi DAO Advisor',
   projectId: projectId,
-  chains: [mantleSepoliaTestnet],
+  chains: [sepolia], // ✅ Use Sepolia testnet
 })
 
-// Create Wagmi config with Mantle Sepolia Testnet
+// Create Wagmi config with Sepolia Testnet
 const config = createConfig({
-  chains: [mantleSepoliaTestnet],
+  chains: [sepolia], // ✅ Use Sepolia testnet
   connectors,
   transports: {
-    [mantleSepoliaTestnet.id]: http('https://rpc.sepolia.mantle.xyz'),
+    [sepolia.id]: http(), // ✅ Use default Sepolia RPC
   },
 })
 
@@ -84,8 +57,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
         <RainbowKitProvider
-          chains={[mantleSepoliaTestnet]}
-          initialChain={mantleSepoliaTestnet}
+          chains={[sepolia]} // ✅ Use Sepolia testnet
+          initialChain={sepolia} // ✅ Set initial chain to Sepolia
         >
           <Router>
             <div className="min-h-screen bg-gray-900">
