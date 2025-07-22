@@ -127,7 +127,7 @@ const VotingInterface = ({ proposalId, proposal }) => {
             min="100"
             step="1"
             disabled={!isConnected}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Web3-500 focus:border-transparent disabled:opacity-50"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-DEA-500 focus:border-transparent disabled:opacity-50"
             placeholder="Enter stake amount..."
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -193,7 +193,7 @@ const VotingInterface = ({ proposalId, proposal }) => {
               </button>
               <button
                 onClick={confirmVote}
-                className="flex-1 px-4 py-2 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg font-medium transition-colors"
               >
                 Confirm Vote
               </button>

@@ -250,10 +250,10 @@ const CreateProposal = () => {
       return
     }
 
-    // ✅ Updated for Web3 chain ID
+    // ✅ Updated for DEA chain ID
     if (chainId !== 11155111) { 
       console.error('❌ Wrong network:', chainId)
-      toast.error('Please switch to Web3 Testnet (Chain ID: 11155111)') 
+      toast.error('Please switch to DEA Testnet (Chain ID: 11155111)') 
       return
     }
 
@@ -349,7 +349,7 @@ const CreateProposal = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Create New Proposal</h1>
           <p className="text-xl text-gray-400">
-            Submit your proposal for AI analysis and community voting on Web3 {/* ✅ Updated text */}
+            Submit your proposal for AI analysis and community voting on DEA {/* ✅ Updated text */}
           </p>
         </div>
 
@@ -389,7 +389,7 @@ const CreateProposal = () => {
             <div className="flex items-center">
               <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-2" />
               <span className="text-yellow-300">
-                Please switch to Web3 Testnet (Chain ID: 11155111). Current: {chainId} {/* ✅ Updated network message */}
+                Please switch to DEA Testnet (Chain ID: 11155111). Current: {chainId} {/* ✅ Updated network message */}
               </span>
             </div>
           </div>
@@ -406,7 +406,7 @@ const CreateProposal = () => {
               <div key={stepItem.number} className="flex items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-all ${
                   stepItem.active 
-                    ? 'bg-Web3-500 border-Web3-500 text-white' 
+                    ? 'bg-DEA-500 border-DEA-500 text-white' 
                     : 'border-gray-600 text-gray-400'
                 }`}>
                   {stepItem.number}
@@ -418,7 +418,7 @@ const CreateProposal = () => {
                 </span>
                 {index < 2 && (
                   <div className={`w-16 h-0.5 ml-4 transition-all ${
-                    step > stepItem.number ? 'bg-Web3-500' : 'bg-gray-600'
+                    step > stepItem.number ? 'bg-DEA-500' : 'bg-gray-600'
                   }`} />
                 )}
               </div>
@@ -441,7 +441,7 @@ const CreateProposal = () => {
                     key={type.value}
                     className={`relative rounded-xl border p-6 cursor-pointer transition-all duration-200 hover:scale-105 ${
                       formData.proposalType === type.value
-                        ? 'border-Web3-500 bg-Web3-900/30 shadow-lg shadow-Web3-500/20'
+                        ? 'border-DEA-500 bg-DEA-900/30 shadow-lg shadow-DEA-500/20'
                         : 'border-gray-600 hover:border-gray-500'
                     }`}
                     onClick={() => setFormData({ ...formData, proposalType: type.value })}
@@ -456,7 +456,7 @@ const CreateProposal = () => {
                             value={type.value}
                             checked={formData.proposalType === type.value}
                             onChange={(e) => setFormData({ ...formData, proposalType: e.target.value })}
-                            className="h-4 w-4 text-Web3-500 border-gray-600 bg-gray-700 mr-3"
+                            className="h-4 w-4 text-DEA-500 border-gray-600 bg-gray-700 mr-3"
                           />
                           <h3 className="text-lg font-medium text-white">{type.label}</h3>
                         </div>
@@ -479,7 +479,7 @@ const CreateProposal = () => {
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Web3-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-DEA-500 focus:border-transparent"
                     placeholder="Enter a clear, descriptive title..."
                     required
                   />
@@ -493,7 +493,7 @@ const CreateProposal = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={8}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Web3-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-DEA-500 focus:border-transparent"
                     placeholder="Provide detailed information about your proposal, including rationale, implementation details, and expected outcomes..."
                     required
                   />
@@ -508,7 +508,7 @@ const CreateProposal = () => {
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={!formData.title || !formData.description}
-                  className="px-8 py-3 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue to Analysis
                 </button>
@@ -529,7 +529,7 @@ const CreateProposal = () => {
                   type="button"
                   onClick={analyzeProposal}
                   disabled={isAnalyzing}
-                  className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-white bg-Web3-600 hover:bg-Web3-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-white bg-DEA-600 hover:bg-DEA-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                 >
                   {isAnalyzing ? (
                     <>
@@ -568,7 +568,7 @@ const CreateProposal = () => {
                   {/* AI Analysis Results */}
                   <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
                     <div className="flex items-center mb-6">
-                      <SparklesIcon className="h-6 w-6 text-Web3-400 mr-3" />
+                      <SparklesIcon className="h-6 w-6 text-DEA-400 mr-3" />
                       <h3 className="text-xl font-semibold text-white">AI Analysis Results</h3>
                       {networkError && (
                         <span className="ml-2 text-xs text-yellow-400 bg-yellow-900/30 px-2 py-1 rounded">
@@ -616,7 +616,7 @@ const CreateProposal = () => {
                           <ul className="space-y-3">
                             {aiAnalysis.keyConsiderations?.map((consideration, index) => (
                               <li key={index} className="flex items-start">
-                                <CheckCircleIcon className="h-5 w-5 text-Web3-400 mr-3 mt-0.5 flex-shrink-0" />
+                                <CheckCircleIcon className="h-5 w-5 text-DEA-400 mr-3 mt-0.5 flex-shrink-0" />
                                 <span className="text-gray-300 text-sm leading-relaxed">{consideration}</span>
                               </li>
                             ))}
@@ -627,9 +627,9 @@ const CreateProposal = () => {
                   </div>
 
                   {/* Submit Section */}
-                  <div className="bg-Web3-900/30 rounded-xl border border-Web3-800 p-6">
+                  <div className="bg-DEA-900/30 rounded-xl border border-DEA-800 p-6">
                     <div className="flex items-center mb-4">
-                      <ClockIcon className="h-5 w-5 text-Web3-400 mr-2" />
+                      <ClockIcon className="h-5 w-5 text-DEA-400 mr-2" />
                       <h4 className="text-lg font-medium text-white">Ready to Submit</h4>
                     </div>
                     <p className="text-gray-300 mb-6">
@@ -648,7 +648,7 @@ const CreateProposal = () => {
                       <button
                         type="submit"
                         disabled={isLoading || !isConnected || chainId !== 11155111 || !aiAnalysis} /* ✅ Updated chain ID check */
-                        className="inline-flex items-center px-8 py-3 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                        className="inline-flex items-center px-8 py-3 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                         onClick={(e) => {
                           console.log('🔵 Button clicked directly!')
                           // The handleSubmit will be called by the form

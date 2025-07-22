@@ -1,18 +1,18 @@
-export const addWeb3Web3ToMetaMask = async () => {
+export const addDEADEAToMetaMask = async () => {
   try {
     await window.ethereum.request({
       method: 'wallet_addEthereumChain',
       params: [
         {
           chainId: '0x138b', // 5003 in hex
-          chainName: 'Web3 Web3 Testnet',
+          chainName: 'DEA DEA Testnet',
           nativeCurrency: {
             name: 'MNT',
             symbol: 'MNT',
             decimals: 18,
           },
-          rpcUrls: ['https://rpc.Web3.Web3.xyz'],
-          blockExplorerUrls: ['https://Web3.Web3scan.xyz'],
+          rpcUrls: ['https://rpc.DEA.DEA.xyz'],
+          blockExplorerUrls: ['https://DEA.DEAscan.xyz'],
         },
       ],
     })

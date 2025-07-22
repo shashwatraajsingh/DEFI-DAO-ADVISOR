@@ -42,12 +42,12 @@ const Header = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-8 h-8 bg-Web3-gradient rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 bg-DEA-gradient rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform">
                   <div className="w-3 h-3 bg-white rounded-full opacity-90"></div>
                 </div>
-                <div className="absolute -inset-1 bg-Web3-gradient rounded-lg blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
+                <div className="absolute -inset-1 bg-DEA-gradient rounded-lg blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
               </div>
-              <span className="text-xl font-bold text-white group-hover:text-Web3-300 transition-colors">
+              <span className="text-xl font-bold text-white group-hover:text-DEA-300 transition-colors">
                 DeFi DAO Advisor
               </span>
             </Link>
@@ -62,7 +62,7 @@ const Header = () => {
                   to={item.href}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     item.current
-                      ? 'bg-Web3-700 text-white shadow-lg'
+                      ? 'bg-DEA-700 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                   }`}
                 >
@@ -77,7 +77,7 @@ const Header = () => {
                 chainId === 11155111 ? 'bg-green-500' : 'bg-yellow-500' // ✅ Use chainId directly
               }`}></div>
               <span className="text-xs text-gray-400">
-                {chainId === 11155111 ? 'Web3' : 'Wrong Network'} {/* ✅ Use chainId directly */}
+                {chainId === 11155111 ? 'DEA' : 'Wrong Network'} {/* ✅ Use chainId directly */}
               </span>
             </div>
 
@@ -121,7 +121,7 @@ const Header = () => {
                   to={item.href}
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
                     item.current
-                      ? 'bg-Web3-700 text-white'
+                      ? 'bg-DEA-700 text-white'
                       : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
@@ -137,7 +137,7 @@ const Header = () => {
                     <div className={`w-2 h-2 rounded-full ${
                       chainId === 11155111 ? 'bg-green-500' : 'bg-yellow-500' // ✅ Use chainId directly
                     }`}></div>
-                    <span>Network: {chainId === 11155111 ? 'Web3' : 'Wrong Network'}</span> {/* ✅ Use chainId directly */}
+                    <span>Network: {chainId === 11155111 ? 'DEA' : 'Wrong Network'}</span> {/* ✅ Use chainId directly */}
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className={`w-2 h-2 rounded-full ${

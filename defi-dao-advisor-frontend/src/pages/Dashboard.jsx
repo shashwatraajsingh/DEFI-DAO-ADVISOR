@@ -67,7 +67,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
             <div className="flex items-center">
-              <CurrencyDollarIcon className="h-8 w-8 text-Web3-400 mr-3" />
+              <CurrencyDollarIcon className="h-8 w-8 text-DEA-400 mr-3" />
               <div>
                 <p className="text-sm text-gray-400">Total Staked</p>
                 <p className="text-2xl font-bold text-white">{userStats.totalStaked.toLocaleString()}</p>
@@ -117,7 +117,7 @@ const Dashboard = () => {
                   <div className="flex-1">
                     <Link 
                       to={`/proposal/${vote.id}`}
-                      className="text-lg font-medium text-white hover:text-Web3-300 transition-colors"
+                      className="text-lg font-medium text-white hover:text-DEA-300 transition-colors"
                     >
                       {vote.title}
                     </Link>

@@ -7,7 +7,7 @@ export const useNetworkCheck = () => {
   
   useEffect(() => {
     if (chain && chain.id !== 5003) {
-      toast.error('Please switch to Web3 Web3 Testnet')
+      toast.error('Please switch to DEA DEA Testnet')
     }
   }, [chain])
   

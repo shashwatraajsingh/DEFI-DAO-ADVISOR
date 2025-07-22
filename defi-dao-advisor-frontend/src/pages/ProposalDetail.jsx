@@ -18,7 +18,7 @@ const ProposalDetail = () => {
     }
 
     if (chainId !== 11155111) {
-      toast.error('Please switch to Web3 Testnet')
+      toast.error('Please switch to DEA Testnet')
       return
     }
 
@@ -106,7 +106,7 @@ const ProposalDetail = () => {
           <button
             onClick={handleVote}
             disabled={isPending || !isConnected}
-            className="w-full px-6 py-3 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium disabled:opacity-50"
+            className="w-full px-6 py-3 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg font-medium disabled:opacity-50"
           >
             {isPending ? 'Submitting Vote...' : 'Submit Vote'}
           </button>

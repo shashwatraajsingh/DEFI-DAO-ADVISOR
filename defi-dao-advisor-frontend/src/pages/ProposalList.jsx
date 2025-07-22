@@ -197,7 +197,7 @@ const ProposalList = () => {
                 placeholder="Search proposals..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Web3-500"
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-DEA-500"
               />
             </div>
 
@@ -207,7 +207,7 @@ const ProposalList = () => {
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-Web3-500"
+                className="bg-gray-700 border border-gray-600 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-DEA-500"
               >
                 <option value="all">All Proposals</option>
                 <option value="active">Active</option>
@@ -220,7 +220,7 @@ const ProposalList = () => {
             {/* Create Button */}
             <Link
               to="/create"
-              className="inline-flex items-center px-6 py-2 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center px-6 py-2 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg font-medium transition-colors"
             >
               Create Proposal
             </Link>
@@ -253,7 +253,7 @@ const ProposalList = () => {
                     )}
                   </div>
 
-                  <h3 className="text-xl font-semibold text-white mb-2 hover:text-Web3-300 transition-colors">
+                  <h3 className="text-xl font-semibold text-white mb-2 hover:text-DEA-300 transition-colors">
                     <Link to={`/proposal/${proposal.id}`}>
                       {proposal.title}
                     </Link>
@@ -265,10 +265,10 @@ const ProposalList = () => {
 
                   {/* AI Summary */}
                   {proposal.aiSummary && (
-                    <div className="bg-Web3-900/30 rounded-lg p-3 border border-Web3-800 mb-4">
+                    <div className="bg-DEA-900/30 rounded-lg p-3 border border-DEA-800 mb-4">
                       <div className="flex items-center mb-2">
-                        <SparklesIcon className="h-4 w-4 text-Web3-400 mr-2" />
-                        <span className="text-sm font-medium text-Web3-300">AI Summary</span>
+                        <SparklesIcon className="h-4 w-4 text-DEA-400 mr-2" />
+                        <span className="text-sm font-medium text-DEA-300">AI Summary</span>
                         <span className={`ml-2 text-xs font-medium ${getRiskColor(proposal.riskLevel)}`}>
                           {proposal.riskLevel} Risk
                         </span>
@@ -313,7 +313,7 @@ const ProposalList = () => {
                     </div>
                     <Link
                       to={`/proposal/${proposal.id}`}
-                      className="inline-flex items-center px-4 py-2 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="inline-flex items-center px-4 py-2 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg text-sm font-medium transition-colors"
                     >
                       <ChartBarIcon className="h-4 w-4 mr-2" />
                       View Details
@@ -339,7 +339,7 @@ const ProposalList = () => {
             </div>
             <Link
               to="/create"
-              className="inline-flex items-center px-6 py-3 bg-Web3-600 hover:bg-Web3-700 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center px-6 py-3 bg-DEA-600 hover:bg-DEA-700 text-white rounded-lg font-medium transition-colors"
             >
               Create First Proposal
             </Link>
