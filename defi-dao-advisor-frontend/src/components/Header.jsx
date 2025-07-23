@@ -137,7 +137,7 @@ const Header = () => {
                     <div className={`w-2 h-2 rounded-full ${
                       chainId === 11155111 ? 'bg-green-500' : 'bg-yellow-500' // ✅ Use chainId directly
                     }`}></div>
-                    <span>Network: {chainId === 11155111 ? 'DEA' : 'Wrong Network'}</span> {/* ✅ Use chainId directly */}
+                    <span>Network: {chainId === 11155111 ? 'Sepolia' : 'Wrong Network'}</span> {/* ✅ Use chainId directly */}
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className={`w-2 h-2 rounded-full ${
